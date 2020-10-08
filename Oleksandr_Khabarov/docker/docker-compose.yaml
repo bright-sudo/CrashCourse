@@ -1,0 +1,29 @@
+version: '3.3'
+services:
+  Apache:
+    build:
+      context: ./
+      dockerfile: Apache.txt
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/var/www
+  Php72cli:
+    build:
+      context: ./
+      dockerfile: Php72cli.txt
+    volumes:
+      - ./www:/var/www
+  mysql:
+    build:
+      context: ./
+      dockerfile: MySQL.txt
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ''
+      MYSQL_ALLOW_EMPTY_PASSWORD : 'yes'
+    restart: always
+    volumes:
+            - ./mysql:/var/lib/mysql
