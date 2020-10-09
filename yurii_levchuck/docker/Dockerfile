@@ -8,9 +8,6 @@ LABEL Description="Cutting-edge LAMP stack, based on Ubuntu 16.04 LTS. Includes 
 RUN apt-get update
 RUN apt-get upgrade -y
 
-COPY debconf.selections /tmp/
-RUN debconf-set-selections /tmp/debconf.selections
-
 RUN apt-get install -y zip unzip
 RUN apt-get install -y \
 	php7.0 \
@@ -48,7 +45,6 @@ RUN apt-get install -y \
 	php7.0-zip
 RUN apt-get install apache2 libapache2-mod-php7.0 -y
 RUN apt-get install mariadb-common mariadb-server mariadb-client -y
-RUN apt-get install postfix -y
 RUN apt-get install git nodejs npm composer nano tree vim curl ftp -y
 RUN npm install -g bower grunt-cli gulp
 
