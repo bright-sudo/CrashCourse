@@ -1,0 +1,43 @@
+
+version: '3.4'
+
+services:
+    apache:
+        image: innomaxx/devopscourse:apache
+        container_name: Apache
+        ports:
+            - 80:80
+        volumes:
+            - ./html/:/var/www/html/
+            - ./apache/my-page.conf:/usr/local/apache2/conf/my-page.conf
+            - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
+        links:
+            - php
+            - mysql
+
+    mysql:
+        image: innomaxx/devopscourse:mysql
+        container_name: MySQL
+        ports:
+            - 3306:3306
+        volumes:
+            - ./mysql/init:/docker-entrypoint-initdb.d
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+            MYSQL_DATABASE: "${DB_NAME}"
+            MYSQL_USER: "${DB_USERNAME}"
+            MYSQL_PASSWORD: "${DB_PASSWORD}"
+        
+    php:
+        image: innomaxx/devopscourse:php
+        container_name: PHP
+        volumes:
+            - ./html/:/var/www/html
+        links:
+            - mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+            MYSQL_DATABASE: "${DB_NAME}"
+            MYSQL_USER: "${DB_USERNAME}"
+            MYSQL_PASSWORD: "${DB_PASSWORD}"
