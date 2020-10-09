@@ -20,3 +20,4 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /usr/share/nginx/html
 WORKDIR /usr/share/nginx/html
 CMD ["php-fpm"]
+
