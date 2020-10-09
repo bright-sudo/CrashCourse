@@ -1,0 +1,18 @@
+2020/10/08 12:20:43 [emerg] 1#1: host not found in upstream "php" in /etc/nginx/conf.d/default.conf:19
+2020/10/08 12:22:51 [warn] 1#1: conflicting server name "localhost" on 0.0.0.0:80, ignored
+2020/10/08 12:27:29 [error] 22#22: *3 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 192.168.72.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "192.168.72.129", referrer: "http://192.168.72.129/"
+2020/10/08 12:34:32 [emerg] 1#1: host not found in upstream "php-fpm" in /etc/nginx/conf.d/default.conf:18
+2020/10/08 12:35:57 [emerg] 1#1: host not found in upstream "php-fpm" in /etc/nginx/conf.d/default.conf:18
+2020/10/08 12:53:17 [error] 22#22: *1 directory index of "/usr/share/nginx/html/" is forbidden, client: 192.168.72.1, server: , request: "GET / HTTP/1.1", host: "192.168.72.129"
+2020/10/08 13:05:45 [error] 23#23: *1 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 192.168.72.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "192.168.72.129", referrer: "http://192.168.72.129/"
+2020/10/08 13:05:45 [error] 23#23: *1 open() "/usr/share/nginx/html/favicon.ico" failed (2: No such file or directory), client: 192.168.72.1, server: , request: "GET /favicon.ico HTTP/1.1", host: "192.168.72.129", referrer: "http://192.168.72.129/"
+2020/10/08 13:39:25 [emerg] 1#1: "daemon" directive is duplicate in /etc/nginx/nginx.conf:3
+2020/10/08 13:40:30 [emerg] 1#1: "user" directive is not allowed here in /etc/nginx/conf.d/nginx.conf:1
+2020/10/08 13:41:00 [emerg] 1#1: "worker_processes" directive is not allowed here in /etc/nginx/conf.d/nginx.conf:1
+2020/10/08 13:42:19 [emerg] 1#1: "pid" directive is not allowed here in /etc/nginx/conf.d/nginx.conf:2
+2020/10/08 13:42:40 [emerg] 1#1: "pid" directive is not allowed here in /etc/nginx/conf.d/nginx.conf:2
+2020/10/08 14:44:32 [emerg] 1#1: "server" directive is not allowed here in /etc/nginx/nginx.conf:1
+2020/10/08 14:45:57 [emerg] 1#1: "server" directive is not allowed here in /etc/nginx/nginx.conf:1
+2020/10/08 14:48:41 [emerg] 1#1: "daemon" directive is duplicate in /etc/nginx/nginx.conf:3
+2020/10/08 14:48:55 [emerg] 1#1: "server" directive is not allowed here in /etc/nginx/nginx.conf:22
+2020/10/08 14:49:38 [emerg] 1#1: "server" directive is not allowed here in /etc/nginx/nginx.conf:22

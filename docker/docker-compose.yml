@@ -1,0 +1,41 @@
+version: "3.3"
+
+services:
+    php-fpm:
+        image: "okachynskyi/crush:php-fpm"
+        container_name: php-fpm
+        ports:
+            - "9000:9000"
+        links: 
+            - mysql
+        volumes: 
+            - ./nginx/public:/usr/share/nginx/html/
+        hostname: php-fpm
+    nginx:
+        image: "okachynskyi/crush:nginx"
+        container_name: nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        links: 
+            - php-fpm
+        volumes:
+            - ./nginx/config:/etc/nginx/conf.d/
+            - ./nginx/public:/usr/share/nginx/html/
+            - ./nginx/logs/nginx:/var/log/nginx
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+        hostname: nginx
+
+    mysql:
+        image: "okachynskyi/crush:mysql"
+        container_name: mysql
+        ports:
+            - "3306:3306"
+        environment:
+            MYSQL_DATABASE: site_db
+            MYSQL_ROOT_PASSWORD: root_password
+        volumes:
+            - ./mysql/logs/mysql:/var/log/mysql
+            - ./mysql/storage:/var/lib/mysql
+        hostname: mysql
+        
