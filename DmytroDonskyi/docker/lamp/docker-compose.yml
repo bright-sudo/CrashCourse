@@ -1,0 +1,39 @@
+mariadb:
+  build: ./mariadb/
+  ports:
+   - "3306:3306"
+  restart: always
+  environment:
+    MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+    MYSQL_DATABASE: "${DB_DB}"
+    MYSQL_USER: "${DB_USERNAME}"
+    MYSQL_PASSWORD: "${DB_PASSWORD}"
+  container_name: "mariadb"
+  volumes: 
+   - ./mariadb/init:/docker-entrypoint-initdb.d
+
+php:
+  build: ./php/
+  container_name: "php"
+  volumes:
+   - ./html/:/var/www/html/
+  links:
+   - mariadb
+  environment:
+    MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+    MYSQL_DATABASE: "${DB_DB}"
+    MYSQL_USER: "${DB_USERNAME}"
+    MYSQL_PASSWORD: "${DB_PASSWORD}"
+
+apache:
+  ports:
+   - "80:80"
+  build: ./apache
+  volumes:
+   - ./html/:/var/www/html/
+   - ./apache/demo-lamp.conf:/usr/local/apache2/conf/demo-lamp.conf
+   - ./apache/my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+  links: 
+   - php
+   - mariadb
+  container_name: "apache"
