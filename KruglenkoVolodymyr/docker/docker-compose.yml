@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+
+  linux:
+    image: volodya777/newubuntu
+
+  httpd:
+    image: volodya777/newhttpd
+    depends_on:
+      - php
+      - linux
+    volumes:
+      - ./apache/conf/httpd.conf:/etc/apache2/apache2.conf
+      - ./apache/html/:/var/www/
+    ports:
+      - "8080:80"
+
+  php:
+    image: volodya777/newphp
+    volumes:
+      - ./apache/html:/var/www/
+    depends_on:
+      - linux
+       
+
+  mysql:
+    image: volodya777/newmysql 
+    ports:
+      - "33006:3306"
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    restart: always
+    #volumes:
+    #  - ./data/:/var/lib/mysql
+    #  - ./mysql/mysql-files:/var/lib/mysql-files/
+    depends_on:
+      - linux
+      - httpd
