@@ -1,29 +1,22 @@
 version: '3.3'
 services:
-  Apache:
-    build:
-      context: ./
-      dockerfile: Apache.txt
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./www:/var/www
-  Php72cli:
-    build:
-      context: ./
-      dockerfile: Php72cli.txt
-    volumes:
-      - ./www:/var/www
   mysql:
-    build:
-      context: ./
-      dockerfile: MySQL.txt
+    image: sahay/sql:f5
     ports:
       - "3306:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ''
       MYSQL_ALLOW_EMPTY_PASSWORD : 'yes'
     restart: always
-    volumes:
-            - ./mysql:/var/lib/mysql
+  Php72cli:
+    image: sahay/php:f5
+    links:
+      - mysql
+  Apache:
+    image: sahay/apache:f5
+    ports:
+      - "80:80"
+      - "443:443"
+    links:
+      - Php72cli
+      - mysql
