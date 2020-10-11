@@ -1,0 +1,40 @@
+version: '3.3'
+
+services:
+    web:
+        image: okachynskyi/crush:nginx
+        ports:
+            - "8080:80"
+        volumes:
+            - ./code:/code
+            - ./conf/nginx/site.conf:/etc/nginx/conf.d/default.conf
+        container_name: "nginx"
+        networks:
+            - code-network
+    php:
+        image: okachynskyi/crush:php
+        volumes:
+            - ./code:/code
+        container_name: "php"
+        networks:
+            - code-network
+    mysql:
+        image: okachynskyi/crush:mysql
+        ports:
+            - "3306:3306"
+        container_name: "mysql"
+        volumes:
+            - ./mysql/logs:/var/log/mysql/
+            - ./mysql/storage:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: "${DB_ROOT_PW}"
+            MYSQL_DATABASE: "${DB_NAME}"
+            MYSQL_USER: "${DB_USER}"
+            MYSQL_PASSWORD: "${DB_PW}"
+
+        networks:
+            - code-network
+
+networks:
+    code-network:
+        driver: bridge
