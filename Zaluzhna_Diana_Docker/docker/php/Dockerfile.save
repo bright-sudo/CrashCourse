@@ -1,0 +1,10 @@
+FROM ubuntu:18.04
+FROM httpd:2.4.46
+FROM mysql:8.0.21
+FROM php:7.4-cl
+MAINTAINER Diana Zaluzhna <yefimpfefferberh@gmail.com>
+
+RUN apt-get update
+RUN apt-get upgrade -y
+
+EXPOSE 80
