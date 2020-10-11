@@ -1,0 +1,27 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  
+  config.vm.provision "docker" do |d|
+    d.pull_images "kraskobohdan/lamp:mysql"
+    d.run "mysql", 
+    	image: "kraskobohdan/lamp:mysql",
+    	args: "-p 3306:3306",
+    	args: "-e MYSQL_ROOT_PASSWORD=root"
+  end
+  
+  config.vm.provision "docker" do |d|
+    d.pull_images "kraskobohdan/lamp:php"
+    d.run "php", 
+    	image: "kraskobohdan/lamp:php",
+    	args: "-p 9000:9000"
+    
+  end
+  
+  config.vm.provision "docker" do |d|
+    d.pull_images "kraskobohdan/lamp:nginx"
+    d.run "nginx", 
+    	image: "kraskobohdan/lamp:nginx",
+    	args: "-p 8080:80"
+  end
+
+end
