@@ -1,3 +1,3 @@
-FROM mysql:8.0
+FROM webdevops/apache
 
 LABEL maintainer="Roman Yevchuk"
