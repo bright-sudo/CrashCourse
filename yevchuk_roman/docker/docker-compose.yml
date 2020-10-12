@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    container_name: mydb
+    image: rdev7/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: userdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testuser
+
+  php:
+    container_name: php
+    image: rdev7/php
+    volumes:
+      - ./src/:/app
+    links: 
+      - db
+    
+  apache:
+    container_name: apache
+    image: rdev7/apache2
+    volumes:
+      - ./src/:/app
+    ports:
+      - 80:80
+      - 443:443
+    links: 
+      - php
+    environment: 
+      WEB_PHP_SOCKET: php:9000
+      
+
+
+    
+
