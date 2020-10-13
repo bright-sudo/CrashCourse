@@ -1,0 +1,24 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/bionic64"
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+  config.vm.provision "docker" do |d|
+    d.pull_images "rdev7/mysql"
+    d.run "mysql", 
+    	image: "rdev7/mysql",
+    	args: "-p 3306:3306",
+    	args: "-e MYSQL_ROOT_PASSWORD=root"
+  end
+
+  config.vm.provision "docker" do |d|
+    d.pull_images "rdev7/php-apache"
+    d.run "php-apache", 
+      image: "rdev7/php-apache",
+      args: %W[
+        -p 8080:80
+        -v /vagrant/src/:/var/www/html
+      ].join(' ')
+
+  end
+
+end
