@@ -1,0 +1,7 @@
+FROM httpd:latest
+
+MAINTAINER Oleksand_Khabarov <sahay.ohikc@gmail.com>
+
+RUN echo 'Nothing to see here, error 404, move on' > /var/www/index.html
+
+EXPOSE 80 443
