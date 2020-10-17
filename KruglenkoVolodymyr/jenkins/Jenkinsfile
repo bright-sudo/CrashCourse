@@ -1,0 +1,50 @@
+pipeline {
+    agent any
+    stages {
+        stage('run mysql') {
+            agent {
+                docker {
+                    image 'volodya777/newmysql'
+                    args '-e MYSQL_ROOT_PASSWORD=toor -e MYSQL_DATABASE=db_test -e MYSQL_USER=user -e MYSQL_PASSWORD=user'
+                }
+            }
+            steps {
+                sh 'mysql -V'
+            }
+        }
+        stage('run httpd') {
+            agent {
+                docker {
+                    image 'volodya777/newhttpd'
+                }
+            }
+            steps {
+                sh 'httpd -v'
+            }
+        }
+        stage('run php') {
+            agent {
+                docker {
+                    image 'volodya777/newphp'
+                }
+            }
+            steps {
+                sh 'php -v'
+            }
+        }
+    }
+    post {
+        always {
+            echo "Job is finished"
+        }
+        success {
+            echo "success"
+        }
+        failure {
+            echo "failure"
+        }
+        aborted {
+            echo "aborted"
+        }
+    }
+}
