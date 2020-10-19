@@ -1,0 +1,47 @@
+pipeline 
+{
+    agent any
+    stages 
+	{
+	    stage('Sql')		
+		{
+		steps
+		    {
+		       sh "docker run -itd -p 13306:3306 --name sql sahay/sql:f5"
+            }
+		}
+		stage('Php')
+		{
+		steps
+		    {
+		       sh "docker run -itd --name php sahay/php:f5"
+		    }
+		}
+        stage('Apache')
+		{
+		steps
+		    {
+		       sh "docker run -itd -p 10001:80 -p 10443:443 --name srv sahay/apachehttpd:v1"
+		    }
+		}
+		stage ('Running')
+		{
+		steps
+		    {
+			   sh "sleep 30"
+			}
+		}
+		stage ('Kill')
+		{
+		steps
+		    {
+		       sh "docker kill srv"
+			   sh "docker rm srv"
+			   sh "docker kill php"
+			   sh "docker rm php"
+			   sh "docker kill sql"
+			   sh "docker rm sql"
+			}
+		}
+    }
+}
