@@ -1,0 +1,30 @@
+#!
+
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label "master"
+    }
+    stages {
+        stage("run nginx") {
+        steps{
+            echo "==== run nginx container ===="
+            sh "docker run -d -p 8081:80 okachynskyi/crush:nginx"
+            }
+        }
+        stage("run mysql") {
+        steps{
+            echo "==== run mysql container ===="
+            sh "docker run -d -p 3306:3306 okachynskyi/crush:mysql"
+            }
+        }
+        stage("run php") {
+        steps{
+            echo "==== run php container ===="
+            sh "docker run -d -p 9000:9000 okachynskyi/crush:php"
+            }
+        }
+    }
+}
+
