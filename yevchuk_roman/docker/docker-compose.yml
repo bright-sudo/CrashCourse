@@ -16,22 +16,21 @@ services:
     container_name: php
     image: rdev7/php
     volumes:
-      - ./src/:/app
+      - ./src/:/var/www/html/
     links: 
       - db
     
   apache:
     container_name: apache
-    image: rdev7/apache2
+    image: rdev7/apache
     volumes:
-      - ./src/:/app
+      - ./src/:/var/www/html/
+      - ./apache/httpd.conf:/usr/local/apache2/conf/httpd.conf
     ports:
       - 80:80
       - 443:443
     links: 
       - php
-    environment: 
-      WEB_PHP_SOCKET: php:9000
       
 
 
