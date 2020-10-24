@@ -1,18 +1,69 @@
-node {
+pipeline{
+    agent any
+    
+    environment {
+        dockerPath = "/var/docker-share/DmytroDonskyi/docker"
+    }
+    
+    stages{
+        stage('checkout') {
+            steps {
+                checkout([   $class: 'GitSCM',
+                branches: [[name: '*/DmytroDonskyi_jenkins']],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [[$class: 'CleanBeforeCheckout'],
+                [$class: 'RelativeTargetDirectory', relativeTargetDir: '/var/docker-share/']],
+                submoduleCfg: [],
+                userRemoteConfigs: [[url: 'https://github.com/Laschuk/CrashCourse.git']]
+                ])
+            }
+        }
 
-    docker.withServer('tcp://192.168.1.10:2376') {
-        docker.image('lamp_mariadb').withRun('-p 3306:3306 --name mariadbj -v jenkins_mariadb_init:/docker-entrypoint-initdb.d/ --network="lampn"') {
-            docker.image('lamp_php').withRun('-p 9000:9000 --name phpj -v jenkins_html:/var/www/html/ --entrypoint="docker-php-ext-install mysqli" --network="lampn"') {
-                docker.image('lamp_apache').withRun('-p 80:80 \
-                    -v jenkins_html:/var/www/html/ \
-                    -v ${PWD}/apache_conf/demo-lamp.conf:/usr/local/apache2/conf/demo-lamp.conf \
-                    -v ${PWD}/apache_conf/my-httpd.conf:/usr/local/apache2/conf/httpd.conf \
-                    --network="lampn"') {
-                    sleep("100")
-                    sh "curl -i http://192.168.1.10:80/"
-                    sh "curl -i http://192.168.1.10:80/index.php"
-                    sh "curl -i http://192.168.1.10:80/dbtest.php"
+        stage('build mariadb'){
+            agent {
+                docker {
+                    image 'tacis/ccdo_lamp_mariadb'
+                    args '-p 3306:3306 --name lamp-mariadb \
+                    -v ${dockerPath}/lamp/mariadb/init/:/docker-entrypoint-initdb.d/ \
+                    --network="lampn" \
+                    -e MYSQL_ROOT_PASSWORD=root \
+                    -e MYSQL_DATABASE=demodb \
+                    -e MYSQL_USER=demouser \
+                    -e MYSQL_PASSWORD=demouserpasswd'
                 }
+            }
+            steps {
+                sh 'mysql --version'
+            }
+        }
+        
+        stage('build php'){
+            agent {
+                docker {
+                    image 'tacis/ccdo_lamp_php'
+                    args '-p 9000:9000 --name lamp-php \
+                    -v ${dockerPath}/lamp/html/:/var/www/html/ \
+                    --network="lampn"'
+                }
+            }
+            steps {
+                sh 'php --version'
+            }
+        }
+        
+        stage('build apache'){
+            agent {
+                docker {
+                    image 'tacis/ccdo_lamp_php'
+                    args '-p 80:80 --name lamp-apache \
+                    -v ${dockerPath}/lamp/html/:/var/www/html/ \
+                    -v ${dockerPath}/lamp/apache/demo-lamp.conf:/usr/local/apache2/conf/demo-lamp.conf \
+                    -v ${dockerPath}/lamp/apache/my-httpd.conf:/usr/local/apache2/conf/httpd.conf \
+                    --network="lampn"'
+                }
+            }
+            steps {
+                sh 'uname -a'
             }
         }
     }
