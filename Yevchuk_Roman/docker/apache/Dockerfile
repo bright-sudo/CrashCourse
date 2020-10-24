@@ -1,4 +1,3 @@
-FROM php:fpm-alpine
-EXPOSE 9000
+FROM httpd:2.4
 
 LABEL maintainer="Roman Yevchuk"
