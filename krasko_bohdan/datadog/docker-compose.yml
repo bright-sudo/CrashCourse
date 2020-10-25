@@ -1,0 +1,64 @@
+version: "3"
+services:
+ mysql:
+  image: mysql:8
+  restart: always
+  container_name: mysql
+  ports:
+   - "3306:3306"
+  expose:
+   - "3306"
+  environment:
+   - MYSQL_ROOT_PASSWORD=root 
+  volumes:
+   - ./mysql-dump:/docker-entrypoint-initdb.d
+  networks:
+   - main
+ nginx:
+  image: nginx:latest
+  container_name: nginx
+  ports:
+   - "80:80"
+   - "443:443"
+  working_dir: /var/www/html
+  volumes:
+   - ./app:/var/www/html
+   - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+   - ./config/nginx/ngx_conf:/etc/nginx/ngx_conf
+  links:
+   - mysql
+   - php-fpm
+  networks:
+   - main
+ php-fpm: 
+  image: php:fpm-alpine
+  container_name: php-fpm
+  ports:
+   - "9000:9000"
+  working_dir: /var/www/html
+  volumes:
+   - ./app:/var/www/html
+   - ./config/php/php.ini:/usr/local/etc/php/php.ini
+  networks:
+   - main
+ datadog:
+   build: datadog
+   container_name: datadog
+   ports:
+    - "8125:8125/udp"
+   links:
+    - mysql
+    - nginx
+    - php-fpm
+   environment:
+    - DD_API_KEY=4eafc588ec0bd0a46ccf51d691eb562c
+   volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - /proc/:/host/proc/:ro
+    - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+   networks:
+    - main
+
+networks:
+ main:
+
