@@ -1,0 +1,8 @@
+FROM ubuntu:bionic
+
+LABEL maintainer="round628485@hotmail.com"
+
+RUN apt-get update
+RUN apt-get upgrade -y
+
+

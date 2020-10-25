@@ -1,0 +1,16 @@
+FROM ubuntu
+
+MAINTAINER Oleksand_Khabarov <sahay.ohikc@gmail.com>
+
+RUN apt-get update 
+
+ENV DEBIAN_FRONTEND noninteractive
+ENV DEBCONF_NONINTERACTIVE_SEEN true
+
+RUN apt-get install -y apache2
+RUN apt-get install -y apache2-utils
+RUN apt-get clean
+
+RUN echo 'Nothing to see here, error 404, move on' > /var/www/index.html
+
+EXPOSE 80 443

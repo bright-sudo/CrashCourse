@@ -1,0 +1,62 @@
+def NODE_LABEL = 'master'
+def PROJECT_NAME = 'lamp';
+def WORKSPASE_DIR = "/var/jenkins/${PROJECT_NAME}";
+
+pipeline {
+    agent {
+        node {
+            label NODE_LABEL
+            customWorkspace WORKSPASE_DIR
+        }
+    }
+    stages {
+        stage('run mysql') {
+            agent {
+                docker {
+                    image 'kraskobohdan/lamp:mysql'
+                    args '-e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=db -e MYSQL_USER=user -e MYSQL_PASSWORD=user'
+                    
+                }
+            }
+            steps {
+                sh 'mysql -V'
+            }
+        }
+        stage('run nginx') {
+            agent {
+                docker {
+                    image 'kraskobohdan/lamp:nginx'
+                }
+            }
+            steps {
+                sh 'nginx -v'
+            }
+        }
+        stage('run php') {
+            agent {
+                docker {
+                    image 'kraskobohdan/lamp:php'
+                }
+            }
+            steps {
+                sh 'php -v | head -n 1 | cut -d " " -f 2'
+            }
+        }
+    }
+    post {
+        always {
+            echo "Job is finished"
+            deleteDir()
+        }
+        success {
+            echo "success"
+        }
+        failure {
+            echo "failure"
+        }
+        aborted {
+            echo "failure"
+        }
+    }
+}
+

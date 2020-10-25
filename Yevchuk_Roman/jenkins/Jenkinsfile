@@ -1,0 +1,14 @@
+node {
+    
+    docker.image('rdev7/mysql').withRun('-e "MYSQL_ROOT_PASSWORD=root" -p 3307:3306') { c ->
+        docker.image('rdev7/php')withRun('-p 9000:9000 -v /home/rdev/src/:/var/www/html/') {
+            docker.image('rdev7/apache')withRun('-p 80:80 -v /home/rdev/src/:/var/www/html/' + 
+            ' -v /home/rdev/httpd.conf:/usr/local/apache2/conf/httpd.conf') {
+                stage('apache') {
+                    sleep("60")
+                }
+            }
+        }     
+    }
+    
+}

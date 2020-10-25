@@ -1,0 +1,6 @@
+FROM mysql
+
+MAINTAINER Oleksand_Khabarov <sahay.ohikc@gmail.com>
+
+ENV MYSQL_ALLOW_EMPTY_PASSWORD='yes'
+EXPOSE 3306

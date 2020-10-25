@@ -1,0 +1,30 @@
+#!
+
+properties([disableConcurrentBuilds()])
+
+pipeline {
+    agent {
+        label "master"
+    }
+    stages {
+        stage("run nginx") {
+        steps{
+            echo "==== run nginx container ===="
+            sh "docker run --name nginx_dd -d --network lamp_v2 --ip 172.22.0.3  -h nginx -p 80:80 --rm -v nginx_code_vol:/code -v nginx_cond.d:/etc/nginx/conf.d/  nginx_dd_agent:5"
+            }
+        }
+        stage("run mysql") {
+        steps{
+            echo "==== run mysql container ===="
+            sh "docker run --name mysql_dd --rm -e MYSQL_ROOT_PASSWORD=root -d -p 3306:3306/tcp -p 33060:33060/tcp mysql_dd:3"
+            sh "docker exec mysql_dd nohup datadog-agent start &"
+            }
+        }
+        stage("run php") {
+        steps{
+            echo "==== run php container ===="
+            sh "docker run --name php_dd -d --network lamp_v2 --ip 172.22.0.2  -h php -p 9000:9000 --rm   -v nginx_code_vol:/code php_dd:7"
+            }
+        }
+    }
+}

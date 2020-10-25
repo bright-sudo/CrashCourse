@@ -1,0 +1,8 @@
+init_config:
+instances:
+  - host: localhost
+    user: datadog
+    pass: root
+    port: 3306
+    options:
+    
