@@ -1,6 +1,8 @@
-FROM mysql
+FROM mysql:5.6.40
 
 MAINTAINER Oleksand_Khabarov <sahay.ohikc@gmail.com>
 
-ENV MYSQL_ALLOW_EMPTY_PASSWORD='yes'
+ENV MYSQL_ROOT_PASSWORD=rootpassword
+ENV DB_NAME=my_db
+
 EXPOSE 3306

@@ -1,22 +1,60 @@
 version: '3.3'
 services:
+
   mysql:
-    image: sahay/sql:f5
+    image: sahay/sql:f10
+    container_name: mysql
+    restart: always
+    labels:
+      com.datadoghq.ad.check_names: 'mysql'
+      com.datadoghq.ad.init_configs: ''
+      com.datadoghq.ad.instances: '{"server": "localhost", "user": "datadog","pass":"rootpassword"}'
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=my_db
     ports:
       - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: ''
-      MYSQL_ALLOW_EMPTY_PASSWORD : 'yes'
-    restart: always
-  Php72cli:
-    image: sahay/php:f5
-    links:
+
+  php72:
+    image: sahay/php:f8
+    container_name: php
+    volumes:
+      - /home/sahay/app/html:/var/www/html
+    depends_on:
       - mysql
-  Apache:
-    image: sahay/apache:f5
+ 
+  apache:
+    image: sahay/apachehttpd:v3
+    container_name: srv
     ports:
-      - "80:80"
-      - "443:443"
-    links:
-      - Php72cli
+      - "10080:80"
+      - "10443:443"
+    labels:
+      com.datadoghq.ad.check_names: 'apache'
+      com.datadoghq.ad.init_configs: ''
+      com.datadoghq.ad.instances: '{"apache_status_url": "http://localhost/server-status?auto"}'
+    volumes:
+      - /home/sahay/app/html:/var/www/html
+    depends_on:
+      - php72
       - mysql
+
+  datadog:
+    image: datadog/agent:7
+    container_name: dd_agent
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
+      - /etc/datadog-agent/conf.d/:/etc/datadog-agent/conf.d/
+      - /etc/passwd:/etc/passwd:ro
+    environment:
+      - DD_PROCESS_AGENT_ENABLED=true
+      - DD_API_KEY=faa969937f9a2736b493a4cf7817fd58
+      - DD_APM_ENABLED=true
+    links: 
+      - mysql
+      - php72
+      - apache
+    ports:
+      - "8125:8125"

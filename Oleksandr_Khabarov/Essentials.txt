@@ -8,10 +8,23 @@ docker tag 38326a6681fe sahay/apache:f1
 docker push sahay/apache
 docker run -itd -p 8080:80 --name srv apache:f5
 docker rm --force srv
+docker exec -it jenkins-blueocean bash
 git add Apache.txt
-git commit -m "Works. Does nothing, but also does no harm."
-git push origin Oleksandr_Khabarov_docker
+git commit -m "Rewritten docker-files, docker-compose plus screenshot of a simple datadog dashboard"
+git push origin Oleksandr_Khabarov
 
-docker container run -d --privileged --network jenkins --rm --name jenkins-docker --network-alias docker --env DOCKER_TLS-CERTDIR=/certs --volume jenkins-docker-certs:/certs/client --volume jenkins-data:/var/jenkins_home --publish 2376:2376 --publish 10001:10001 docker:dind
+docker container run -d --privileged --network jenkins --rm --name jenkins-docker --network-alias docker --env DOCKER_TLS-CERTDIR=/certs --volume jenkins-docker-certs:/certs/client --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -p 2376:2376 -p 10001:10001 -p 13306:13306 -p 18080:18080 docker:dind
 
-docker container run --name jenkins-blueocean --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home --volume jenkins-docker-certs:/certs/client:ro jenkinsci/blueocean
+docker container run --name jenkins-blueocean --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home --volume jenkins-docker-certs:/certs/client:ro --volume /home/sahay/app:/app jenkinsci/blueocean
+
+docker container run --name jenkins-blueocean --rm --detach -p 8080:8080 -p 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -v /var/run/docker.sock:/var/run/docker.sock jenkinsci/blueocean
+
+DD_API_KEY=faa969937f9a2736b493a4cf7817fd58
+
+sudo chmod 777 /var/run/docker.sock
+
+DOCKER_CONTENT_TRUST=1 docker run -d --rm --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -v /conf.d:/conf.d -e DD_API_KEY=faa969937f9a2736b493a4cf7817fd58 datadog/agent:7
+
+service mysql stop
+
+
