@@ -1,0 +1,56 @@
+version: "3.7"
+
+services:
+  
+  mariadb:
+    image: tacis/ccdo_lamp_mariadb
+    container_name: lamp-mariadb
+    ports:
+     - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DB}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    volumes: 
+     - "./mariadb/init:/docker-entrypoint-initdb.d"
+    labels:
+      com.datadoghq.ad.check_names: '["mysql"]'
+      com.datadoghq.ad.init_configs: '[{}]'
+      com.datadoghq.ad.instances: '[{"server":"%%host%%", "user":"datadog", "pass":"datadogpasswd"}]'
+
+  php:
+    image: tacis/ccdo_lamp_php
+    container_name: lamp-php
+    volumes:
+     - ./html/:/var/www/html/
+    links:
+     - mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DB}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+  
+  apache:
+    image: tacis/ccdo_lamp_apache
+    container_name: lamp-apache
+    ports:
+     - "80:80"
+    volumes:
+     - ./html/:/var/www/html/
+     - ./apache/demo-lamp.conf:/usr/local/apache2/conf/demo-lamp.conf
+     - ./apache/my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+     - ./apache/status.conf:/usr/local/apache2/conf/status.conf
+    links: 
+     - php
+     - mariadb
+    labels:
+      com.datadoghq.ad.check_names: '["apache", "http_check"]'
+      com.datadoghq.ad.init_configs: '[{},{}]'
+      com.datadoghq.ad.instances: '[[{"apache_status_url": "http://%%host%%/server-status?auto"}],[{"name":"<WEBSITE_1>","url":"http://%%host%%/index.php","timeout":1},{"name":"<WEBSITE_2>","url":"http://%%host%%/dbtest.php","timeout":1}]]'
+
+networks:
+  default: 
+    external:
+      name: lampn
