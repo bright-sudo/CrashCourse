@@ -1,0 +1,51 @@
+version: "3.7"
+
+services:
+  
+  mariadb:
+    image: tacis/ccdo_lamp_mariadb
+    container_name: lamp-mariadb
+    ports:
+     - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DB}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    volumes: 
+     - "./mariadb/init:/docker-entrypoint-initdb.d"
+    networks:
+     - lampn
+
+  php:
+    image: tacis/ccdo_lamp_php
+    container_name: lamp-php
+    volumes:
+     - ./html/:/var/www/html/
+    links:
+     - mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DB}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    networks:
+     - lampn
+  
+  apache:
+    image: tacis/ccdo_lamp_apache
+    container_name: lamp-apache
+    ports:
+     - "80:80"
+    volumes:
+     - ./html/:/var/www/html/
+     - ./apache/demo-lamp.conf:/usr/local/apache2/conf/demo-lamp.conf
+     - ./apache/my-httpd.conf:/usr/local/apache2/conf/httpd.conf
+    links: 
+     - php
+     - mariadb
+    networks:
+     - lampn
+
+networks:
+  lampn:
