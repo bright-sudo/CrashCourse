@@ -1,7 +1,12 @@
-FROM httpd:latest
+FROM httpd:alpine
 
 MAINTAINER Oleksand_Khabarov <sahay.ohikc@gmail.com>
 
-RUN echo 'Nothing to see here, error 404, move on' > /var/www/index.html
+RUN apk update; \
+    apk upgrade;
+# Copy apache vhost file to proxy php requests to php-fpm container
+COPY demo.apache.conf /usr/local/apache2/conf/demo.apache.conf
+RUN echo "Include /usr/local/apache2/conf/demo.apache.conf" \
+    >> /usr/local/apache2/conf/httpd.conf
 
 EXPOSE 80 443
