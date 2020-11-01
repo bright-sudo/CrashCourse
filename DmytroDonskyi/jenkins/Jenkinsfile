@@ -9,7 +9,7 @@ pipeline{
         stage('checkout') {
             steps {
                 checkout([   $class: 'GitSCM',
-                branches: [[name: '*/DmytroDonskyi_jenkins']],
+                branches: [[name: '*/DmytroDonskyi_docker']],
                 doGenerateSubmoduleConfigurations: false,
                 extensions: [[$class: 'CleanBeforeCheckout'],
                 [$class: 'RelativeTargetDirectory', relativeTargetDir: '/var/docker-share/']],
