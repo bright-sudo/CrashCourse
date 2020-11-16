@@ -1,0 +1,99 @@
+pipeline {
+    
+    environment {
+        registry = "kraskobohdan/demo"
+        registryCredential = "dockerhub"
+        dockerImage = ''
+    }
+    
+    agent any
+
+    tools {
+        terraform 'Terraform'
+        jdk 'jdk-11'
+        maven "M3"
+    }
+    
+    stages {
+        stage('CleanWorkspace') {
+            steps {
+                dir('student') {
+                    sh "docker-compose down"
+                }
+                cleanWs()
+                
+            }
+        }
+
+        stage('Build') {
+            steps {
+                git 'https://github.com/BohdanKrasko/test'
+                dir ('student') { 
+                    sh "mvn package -Dmaven.test.skip=true "
+                }
+                
+            }
+            
+            post {
+                success {
+                    dir('student') {
+                        archiveArtifacts 'target/*.jar'
+                    }
+                }
+            }
+        }
+        stage('Building image') {
+            steps{
+                script {
+                    dir('student') {
+                        dockerImage = docker.build registry + ":$BUILD_NUMBER"
+                    }
+                }
+            }
+        }
+        
+        stage('Deploy Image') {
+            steps{    
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                    dockerImage.push()
+                    }
+                }
+            }
+        }
+        
+        // stage('Remove Unused docker image') {
+        //     steps{
+        //         sh "docker rmi $registry:$BUILD_NUMBER"
+        //         //$BUILD_NUMBER
+        //     }
+        // }
+        // stage('docker-compose') {
+            
+        //   steps {
+        //       dir('student')  {
+        //       sh "BUILD_NUMBER=$BUILD_NUMBER docker-compose up -d"
+              
+        //     }
+        //   }
+        // }
+        
+        stage('Terraform') {
+            steps {
+                dir ('terraform') { 
+                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                    sh "terraform init"
+                    sh "terraform plan"
+                    sh "terraform apply -auto-approve"
+                    sh "terraform destroy -auto-approve"
+                    }
+                    
+                }
+                
+            }
+            
+        }
+        
+
+    }
+}
