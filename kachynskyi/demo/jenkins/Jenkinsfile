@@ -1,0 +1,41 @@
+pipeline {
+  environment {
+    nginx_imagename = "okachynskyi/crush:nginx"
+    mysql_imagename = "okachynskyi/crush:mysql"
+    registryCredential = 'dockerhub'
+    nginxImage = ''
+    mysqlImage =''
+  }
+  agent any
+  stages {
+    stage('Cloning Git') {
+      steps {
+        git([url: 'https://github.com/bright-sudo/crash.git', branch: 'master', credentialsId: 'github'])
+      }
+    }
+    stage('Building frontend image') {
+      steps{
+        script {
+          nginxImage = docker.build(nginx_imagename, "-f docker/nginx/Dockerfile .")
+        }
+      }
+    }
+    stage('Building backend image') {
+      steps{
+        script {
+          mysqlImage = docker.build(mysql_imagename, "-f docker/mysql/Dockerfile .")
+        }
+      }
+    }
+    stage('Deploy Image') {
+      steps{
+        script {
+          docker.withRegistry( '', registryCredential ) {
+            nginxImage.push('nginx_$BUILD_NUMBER')
+            mysqlImage.push('mysql_$BUILD_NUMBER')
+          }
+        }
+      }
+    }
+  }
+}
