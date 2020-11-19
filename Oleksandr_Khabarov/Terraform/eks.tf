@@ -32,11 +32,11 @@ resource "aws_eks_cluster" "aws_eks" {
   role_arn = aws_iam_role.eks_cluster.arn
 
   vpc_config {
-    subnet_ids = ["subnet-0ebe19e306afc12d0", "subnet-0e033843bfd622edc", "subnet-e5972cc4"]
+    subnet_ids = ["subnet-0ebe19e306afc12d0", "subnet-0e033843bfd622edc"]
   }
 
   tags = {
-    Name = "EKS_tuto"
+    Name = "eks_cluster_tuto"
   }
 }
 
@@ -78,11 +78,12 @@ resource "aws_eks_node_group" "node" {
   cluster_name    = aws_eks_cluster.aws_eks.name
   node_group_name = "node_tuto"
   node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = ["subnet-0ebe19e306afc12d0", "subnet-0e033843bfd622edc", "subnet-e5972cc4"]
+  subnet_ids      = ["subnet-0ebe19e306afc12d0", "subnet-0e033843bfd622edc"]
+  instance_types  = ["t2.micro"]
 
   scaling_config {
-    desired_size = 1
-    max_size     = 1
+    desired_size = 5
+    max_size     = 5
     min_size     = 1
   }
 
@@ -93,4 +94,11 @@ resource "aws_eks_node_group" "node" {
     aws_iam_role_policy_attachment.AmazonEKS_CNI_Policy,
     aws_iam_role_policy_attachment.AmazonEC2ContainerRegistryReadOnly,
   ]
+}
+
+resource "null_resource" "kubectl" {
+  depends_on = [aws_eks_cluster.aws_eks]
+  provisioner "local-exec" {
+    command = "aws eks --region us-east-1 update-kubeconfig --name eks_cluster_tuto"
+  }
 }

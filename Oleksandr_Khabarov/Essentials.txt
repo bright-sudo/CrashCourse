@@ -1,5 +1,5 @@
 git clone https://github.com/Laschuk/CrashCourse.git
-git checkout -b Oleksandr_Khabarov_docker
+git checkout -b Oleksandr_Khabarov
 docker build -f "f:\Docs\CrashCourse\DockerFiles\PHP.txt" -t php:v1 .
 docker images
 docker rmi e12dc8c9b2c3
@@ -10,7 +10,7 @@ docker run -itd -p 8080:80 --name srv apache:f5
 docker rm --force srv
 docker exec -it jenkins-blueocean bash
 git add Apache.txt
-git commit -m "Rewritten docker-files, docker-compose plus screenshot of a simple datadog dashboard"
+git commit -m "Developed eks and kubernetes deployment"
 git push origin Oleksandr_Khabarov
 
 docker container run -d --privileged --network jenkins --rm --name jenkins-docker --network-alias docker --env DOCKER_TLS-CERTDIR=/certs --volume jenkins-docker-certs:/certs/client --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -p 2376:2376 -p 10001:10001 -p 13306:13306 -p 18080:18080 docker:dind
@@ -25,6 +25,24 @@ sudo chmod 777 /var/run/docker.sock
 
 DOCKER_CONTENT_TRUST=1 docker run -d --rm --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -v /conf.d:/conf.d -e DD_API_KEY=faa969937f9a2736b493a4cf7817fd58 datadog/agent:7
 
+docker run --name miner --rm wernight/cpuminer-multi:alpine cpuminer -a qubit -o stratum+tcp://digihash.co:3012 -u DUSVnzc6zWbrWqrRVaZGC7pkT519Lwvmbs
+
 service mysql stop
+Continious Integration/Continious Delivery/Continious Deployment
 
+4 джоби
+1. З гіт хаба в контейнер.
+2. Розгортання кластера.
+3. Деплой в кластер.
+4. Моніторинг.
 
+secret manager
+dockerImage = docker.build(nginx_imagename, "-f jenkins/Dockerfile .")
+okachynskyi/crush:nginx
+dockerImage.push("$BUILD_NUMBER")
+
+aws eks --region us-east-1 update-kubeconfig --name eks_cluster_tuto
+https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html
+kubectl get nodes
+kubectl get pods
+kubectl logs terraform-pod
