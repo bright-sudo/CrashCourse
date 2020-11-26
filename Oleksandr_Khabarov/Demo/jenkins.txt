@@ -1,0 +1,53 @@
+pipeline 
+{
+    agent any
+    tools {
+        terraform "terraform4j"
+    }
+     parameters 
+    {
+        choice(
+            choices: ['Terraform apply' , 'Terraform destroy'],
+            description: '',
+            name: 'job_action')
+    }
+    stages 
+	{
+	    stage('Git Checkout')
+	    {
+	        steps 
+	        {
+	            git credentialsId: 'GitHubSecret', url: 'https://github.com/Sahay-ohikc/4Terraform'
+	        }
+	    }
+	    stage('Terraform init')		
+		{
+		steps
+		    {
+  		         sh "terraform init"
+            }
+		}
+		stage('terraform apply')
+		{
+		    when 
+		    {
+                expression { params.job_action == 'Terraform apply' }
+            }
+		steps
+		    {
+		       sh "terraform apply -var "datadog_api_key=***" -var "datadog_app_key=***" --auto-approve"   
+		    }
+		}
+		stage('terraform destroy')
+		{
+		    when 
+		    {
+                expression { params.job_action == 'Terraform destroy' }
+            }
+		steps
+		    {
+		       sh "terraform destroy -var "datadog_api_key=***" -var "datadog_app_key=***"--auto-approve"   
+		    }
+		}
+    }
+}
