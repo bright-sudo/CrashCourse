@@ -6,6 +6,7 @@ pipeline {
         dockerImage = ''
         PATH = "$PATH:$HOME/bin:."
         DD_API_KEY = credentials('DD_API_KEY_DEV')
+        DD_APP_KEY = credentials('DD_APP_KEY_DEV')
     }
     
     agent any
@@ -142,7 +143,16 @@ pipeline {
             steps {
                 dir('datadog') {
                     withAWS(credentials:'aws_credentials', region:'eu-west-3') {
-                        sh "KUBECONFIG=../terraform/kubeconfig_my-cluster ../helm install datadogeks -f datadog-values.yaml --set datadog.site='datadoghq.com' --set datadog.apiKey=$DD_API_KEY datadog/datadog "
+                        sh (
+                            label: "Installing Datadog and create monitors",
+                            script: """#!/usr/bin/env bash
+                            KUBECONFIG=../terraform/kubeconfig_my-cluster ../helm install datadogeks -f datadog-values.yaml --set datadog.site='datadoghq.com' --set datadog.apiKey=$DD_API_KEY datadog/datadog
+                            terraform init
+                            terraform paln -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'
+                            terraform apply -auto-approve -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'
+                            """
+                        )
+                        
                     }
                 }
             }
@@ -152,6 +162,11 @@ pipeline {
                 expression { params.REQUESTED_ACTION == 'destroy' }
             }
             steps {
+                dir ('datadog') {
+                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                        sh "terraform destroy -auto-approve -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'"
+                    }
+                }
                 dir ('terraform') { 
                     withAWS(credentials:'aws_credentials', region:'eu-west-3') {
                         sh(
@@ -164,9 +179,9 @@ pipeline {
                             """
                         )
                     
-                        sleep(time:10,unit:"SECONDS")
+                    sleep(time:10,unit:"SECONDS")
                 
-                       sh "terraform destroy -auto-approve"
+                    sh "terraform destroy -auto-approve"
                         
                     }
                     
