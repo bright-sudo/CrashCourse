@@ -72,3 +72,6 @@ module "eks" {
   write_kubeconfig   = true
   config_output_path = "./"
 }
+module "datadog" {
+  source = "./modules/datadog"
+}
