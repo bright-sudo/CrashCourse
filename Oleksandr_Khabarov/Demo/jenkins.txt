@@ -1,6 +1,11 @@
 pipeline 
 {
     agent any
+    environment {
+      API_KEY = credentials('a98bae3c-4750-4fda-ae2a-fd488dcad63d')
+      APP_KEY = credentials('09e0e7bb-583f-4ade-bd7f-5447da0ccbe0')
+      dd_aws_integration_external_id = credentials('297b92da-03f9-4847-a641-e13a01746d75')
+    }
     tools {
         terraform "terraform4j"
     }
@@ -33,10 +38,10 @@ pipeline
 		    {
                 expression { params.job_action == 'Terraform apply' }
             }
-		steps
+		    steps
 		    {
-		       sh "terraform apply -var "datadog_api_key=***" -var "datadog_app_key=***" --auto-approve"   
-		    }
+		       sh 'terraform apply --auto-approve -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
+		  	}
 		}
 		stage('terraform destroy')
 		{
@@ -46,7 +51,7 @@ pipeline
             }
 		steps
 		    {
-		       sh "terraform destroy -var "datadog_api_key=***" -var "datadog_app_key=***"--auto-approve"   
+		      sh 'terraform destroy --auto-approve -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
 		    }
 		}
     }

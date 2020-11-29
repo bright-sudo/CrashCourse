@@ -8,41 +8,34 @@ docker tag 38326a6681fe sahay/apache:f1
 docker push sahay/apache
 docker run -itd -p 8080:80 --name srv apache:f5
 docker rm --force srv
-docker exec -it jenkins-blueocean bash
+docker exec -it -u root jenk bash
 git add Apache.txt
 git commit -m "Developed eks and kubernetes deployment"
 git push origin Oleksandr_Khabarov
 
-docker container run -d --privileged --network jenkins --rm --name jenkins-docker --network-alias docker --env DOCKER_TLS-CERTDIR=/certs --volume jenkins-docker-certs:/certs/client --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -p 2376:2376 -p 10001:10001 -p 13306:13306 -p 18080:18080 docker:dind
+sudo docker container run --name jenk --rm --detach -p 8080:8080 -p 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins
 
-docker container run --name jenkins-blueocean --rm --detach --network jenkins --env DOCKER_HOST=tcp://docker:2376 --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 --publish 8080:8080 --publish 50000:50000 --volume jenkins-data:/var/jenkins_home --volume jenkins-docker-certs:/certs/client:ro --volume /home/sahay/app:/app jenkinsci/blueocean
-
-docker container run --name jenkins-blueocean --rm --detach -p 8080:8080 -p 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -v /var/run/docker.sock:/var/run/docker.sock jenkinsci/blueocean
-
-DD_API_KEY=faa969937f9a2736b493a4cf7817fd58
+DD_API_KEY=1de0820198a3c8aea59d540f9ffefae7
 
 sudo chmod 777 /var/run/docker.sock
 
-DOCKER_CONTENT_TRUST=1 docker run -d --rm --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -v /conf.d:/conf.d -e DD_API_KEY=faa969937f9a2736b493a4cf7817fd58 datadog/agent:7
+DOCKER_CONTENT_TRUST=1 docker run -d --rm --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -v /conf.d:/conf.d -e DD_API_KEY=1de0820198a3c8aea59d540f9ffefae7 datadog/agent:7
 
 docker run --name miner --rm wernight/cpuminer-multi:alpine cpuminer -a qubit -o stratum+tcp://digihash.co:3012 -u DUSVnzc6zWbrWqrRVaZGC7pkT519Lwvmbs
 
 service mysql stop
 Continious Integration/Continious Delivery/Continious Deployment
 
-4 джоби
-1. З гіт хаба в контейнер.
-2. Розгортання кластера.
-3. Деплой в кластер.
-4. Моніторинг.
+aws eks --region us-east-1 update-kubeconfig --name eks_tuto
 
-secret manager
-dockerImage = docker.build(nginx_imagename, "-f jenkins/Dockerfile .")
-okachynskyi/crush:nginx
-dockerImage.push("$BUILD_NUMBER")
-
-aws eks --region us-east-1 update-kubeconfig --name eks_cluster_tuto
 https://docs.aws.amazon.com/eks/latest/userguide/create-kubeconfig.html
+
 kubectl get nodes
 kubectl get pods
 kubectl logs terraform-pod
+https://kubernetes.io/ru/docs/reference/kubectl/cheatsheet/
+terraform init 
+terraform plan
+terraform apply --auto-approve
+
+
