@@ -16,5 +16,6 @@ variable "url" {
   default = "stratum+tcp://52.11.201.217:3012"
 }
 
+variable "datadog_aws_integration_external_id"{}
 variable "datadog_api_key" {}
 variable "datadog_app_key" {}
