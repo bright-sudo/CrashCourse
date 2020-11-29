@@ -40,8 +40,8 @@ pipeline {
                 expression { params.REQUESTED_ACTION == 'deploy' }
             }
             steps {
-                git 'https://github.com/BohdanKrasko/test'
-                dir ('student') { 
+                git([url: 'https://github.com/Laschuk/CrashCourse', branch: 'krasko_bohdan_demo', credentialsId: 'friday'])
+                dir ('krasko_bohdan/demo/student') { 
                     sh "mvn package -Dmaven.test.skip=true "
                 }
                 
@@ -49,7 +49,7 @@ pipeline {
             
             post {
                 success {
-                    dir('student') {
+                    dir('krasko_bohdan/demo/student') {
                         archiveArtifacts 'target/*.jar'
                     }
                 }
@@ -61,7 +61,7 @@ pipeline {
             }
             steps{
                 script {
-                    dir('student') {
+                    dir('krasko_bohdan/demo/student') {
                         dockerImage = docker.build registry + ":$BUILD_NUMBER"
                     }
                 }
@@ -76,33 +76,33 @@ pipeline {
                 script {
                     docker.withRegistry( '', registryCredential ) {
                     dockerImage.push()
-                    //sh "print=$registry:$BUILD_NUMBER"
                     }
                 }
             }
         }
         
+        stage('Terraform init and plan') {
+            when {
+                expression { params.REQUESTED_ACTION == 'deploy' }
+            }
+            steps {
+                dir ('krasko_bohdan/demo/terraform') { 
+                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                        exportDatadogCred()
+                        sh "terraform init"
+                        sh "terraform plan"
+                    }
+                }
+            }
+        }
         stage('Terraform') {
             when {
                 expression { params.REQUESTED_ACTION == 'deploy' }
             }
             steps {
-                dir ('terraform') { 
+                dir ('krasko_bohdan/demo/terraform') { 
                     withAWS(credentials:'aws_credentials', region:'eu-west-3') {
-                    sh "terraform init"
-                    sh "terraform plan"
-                    sh "terraform apply -auto-approve"
-                    
-                    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl apply -f ../kubernetes/postgres-deployment.yml"
-                    sleep(time:30,unit:"SECONDS")
-                    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl get pods"
-                   
-                    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl create deployment spring --image=$registry:$BUILD_NUMBER"
-                    sleep(time:20,unit:"SECONDS")
-                    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl expose deployment spring  --type=LoadBalancer  --name=spring --port=8888"
-                    sleep(time:20,unit:"SECONDS")
-                    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl describe service spring"
-                    
+                        deployProject()
                     }
                     
                 }
@@ -141,18 +141,14 @@ pipeline {
                 expression { params.REQUESTED_ACTION == 'deploy' }
             }
             steps {
-                dir('datadog') {
+                dir('krasko_bohdan/demo/datadog') {
                     withAWS(credentials:'aws_credentials', region:'eu-west-3') {
                         sh (
-                            label: "Installing Datadog and create monitors",
+                            label: "Installing Datadog",
                             script: """#!/usr/bin/env bash
-                            KUBECONFIG=../terraform/kubeconfig_my-cluster ../helm install datadogeks -f datadog-values.yaml --set datadog.site='datadoghq.com' --set datadog.apiKey=$DD_API_KEY datadog/datadog
-                            terraform init
-                            terraform paln -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'
-                            terraform apply -auto-approve -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'
+                            KUBECONFIG=../terraform/kubeconfig_my-cluster ../../../helm install datadogeks -f datadog-values.yaml --set datadog.site='datadoghq.com' --set datadog.apiKey=$DD_API_KEY datadog/datadog
                             """
                         )
-                        
                     }
                 }
             }
@@ -162,25 +158,20 @@ pipeline {
                 expression { params.REQUESTED_ACTION == 'destroy' }
             }
             steps {
-                dir ('datadog') {
-                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
-                        sh "terraform destroy -auto-approve -var 'datadog_api_key=$DD_API_KEY' -var 'datadog_app_key=$DD_APP_KEY'"
-                    }
-                }
-                dir ('terraform') { 
+                dir ('krasko_bohdan/demo/terraform') { 
                     withAWS(credentials:'aws_credentials', region:'eu-west-3') {
                         sh(
                             label: "Destroy EKS",
                             script: """#!/usr/bin/env bash
-                            KUBECONFIG=./kubeconfig_my-cluster ../helm delete datadogeks
+                            KUBECONFIG=./kubeconfig_my-cluster ../../../helm delete datadogeks
                             KUBECONFIG=./kubeconfig_my-cluster kubectl delete service spring
                             KUBECONFIG=./kubeconfig_my-cluster kubectl delete deployment spring
                             KUBECONFIG=./kubeconfig_my-cluster kubectl delete -f ../kubernetes/postgres-deployment.yml
                             """
                         )
-                    
+
                     sleep(time:10,unit:"SECONDS")
-                
+                    exportDatadogCred()
                     sh "terraform destroy -auto-approve"
                         
                     }
@@ -194,4 +185,25 @@ pipeline {
 
     }
 }
+void deployProject() {
+    sh "terraform apply -auto-approve"
 
+    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl apply -f ../kubernetes/postgres-deployment.yml"
+    sleep(time:20,unit:"SECONDS")
+    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl get pods"
+    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl create deployment spring --image=$registry:$BUILD_NUMBER"
+    sleep(time:20,unit:"SECONDS")
+    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl expose deployment spring  --type=LoadBalancer  --name=spring --port=8888"
+    sleep(time:20,unit:"SECONDS")
+    sh "KUBECONFIG=./kubeconfig_my-cluster kubectl describe service spring"
+}
+
+void exportDatadogCred() {
+    sh(
+        label: "Datadog Cred",
+        script: """#!/usr/bin/env bash
+        export DATADOG_API_KEY="$DD_API_KEY"
+        export DATADOG_APP_KEY="$DD_APP_KEY"
+        """
+        )
+}
