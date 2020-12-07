@@ -1,5 +1,10 @@
 provider "aws" {
-  region = "eu-west-3"
+  region = "eu-west-2"
+}
+
+resource "aws_key_pair" "main" {
+  key_name = "eks_key"
+  public_key = file("~/.ssh/eks_key.pub")
 }
 
 data "aws_eks_cluster" "cluster" {
@@ -41,6 +46,7 @@ module "vpc" {
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.cluster_name}" = "shared"
     "kubernetes.io/role/elb"                      = "1"
+    "eks_subnet"                                  = "1"
   }
 
   private_subnet_tags = {
@@ -49,14 +55,28 @@ module "vpc" {
   }
 }
 
+resource "aws_security_group" "all_worker_mgmt" {
+  name_prefix = "all_worker_management"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port = 22
+    to_port   = 22
+    protocol  = "tcp"
+
+    cidr_blocks = [
+      "172.16.0.0/12"
+    ]
+  }
+}
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
   version = "12.2.0"
 
   cluster_name    = "${local.cluster_name}"
   cluster_version = "1.17"
-  subnets         = module.vpc.private_subnets
-
+  subnets         = module.vpc.public_subnets
+  #key_name = aws_key_pair.main.key_name
   vpc_id = module.vpc.vpc_id
 
   node_groups = {
@@ -66,6 +86,9 @@ module "eks" {
       min_capacity     = 1
 
       instance_type = "m5.large"
+      key_name = aws_key_pair.main.key_name
+      additional_security_group_ids = [aws_security_group.all_worker_mgmt.id]
+      
     }
   }
 
