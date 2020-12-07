@@ -1,0 +1,40 @@
+- hosts: aws_region_eu_west_2
+  gather_facts: no
+  become: true
+  vars:
+    region: eu-west-2
+  
+  collections:
+    - community.aws
+    - amazon.aws
+    
+  tasks:
+    - name: Gathering subnets
+      ec2_vpc_subnet_info:
+        region: "{{ region }}"
+        filters:
+          "tag:eks_subnet": "1"
+      register: subnets
+    - set_fact:
+        subnet_ids: "{{ subnets | json_query('subnets[*].subnet_id')}}"
+    - debug: var=subnet_ids
+    
+    - name: Gathering security group
+      ec2_group_info:
+        region: "{{ region }}"
+        filters:
+          "tag:Name": my-cluster-eks_cluster_sg
+      register: security_group
+    - set_fact:
+        secutity_group_ids: "{{ security_group | json_query('security_groups[*].group_id')}}"
+    - debug: var=secutity_group_ids
+    
+    - name: Test EKS
+      aws_eks_cluster:
+        region: "{{ region }}"
+        name: my-cluster
+        role_arn: ""
+        subnets: "{{ subnet_ids }}"
+        security_groups: "{{ secutity_group_ids }}"
+      register: eks
+    - debug: var=eks

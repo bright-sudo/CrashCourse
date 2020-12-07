@@ -7,6 +7,8 @@ pipeline {
         PATH = "$PATH:$HOME/bin:."
         DD_API_KEY = credentials('DD_API_KEY_DEV')
         DD_APP_KEY = credentials('DD_APP_KEY_DEV')
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
     }
     
     agent any
@@ -87,7 +89,7 @@ pipeline {
             }
             steps {
                 dir ('krasko_bohdan/demo/terraform') { 
-                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                    withAWS(credentials:'aws_credentials', region:'eu-west-2') {
                         exportDatadogCred()
                         sh "terraform init"
                         sh "terraform plan"
@@ -101,7 +103,7 @@ pipeline {
             }
             steps {
                 dir ('krasko_bohdan/demo/terraform') { 
-                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                    withAWS(credentials:'aws_credentials', region:'eu-west-2') {
                         deployProject()
                     }
                     
@@ -142,7 +144,7 @@ pipeline {
             }
             steps {
                 dir('krasko_bohdan/demo/datadog') {
-                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                    withAWS(credentials:'aws_credentials', region:'eu-west-2') {
                         sh (
                             label: "Installing Datadog",
                             script: """#!/usr/bin/env bash
@@ -153,13 +155,30 @@ pipeline {
                 }
             }
         }
+        
+        stage('Ansible') {
+            when {
+                expression { params.REQUESTED_ACTION == 'deploy' }
+            }
+            steps {
+                dir('krasko_bohdan/demo/ansible') {
+                   
+                    sh "export AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID"
+                    sh "export AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY"
+                    sh "ansible-inventory -i inventory/aws_ec2.yaml --graph"
+                    sh "ansible-playbook simple.yml"
+                    sh "ansible-playbook sunday.yml"
+                    
+                }
+            }
+        }
         stage('Destroy') {
             when {
                 expression { params.REQUESTED_ACTION == 'destroy' }
             }
             steps {
                 dir ('krasko_bohdan/demo/terraform') { 
-                    withAWS(credentials:'aws_credentials', region:'eu-west-3') {
+                    withAWS(credentials:'aws_credentials', region:'eu-west-2') {
                         sh(
                             label: "Destroy EKS",
                             script: """#!/usr/bin/env bash
