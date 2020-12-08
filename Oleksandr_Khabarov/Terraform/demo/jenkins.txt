@@ -5,6 +5,8 @@ pipeline
       API_KEY = credentials('a98bae3c-4750-4fda-ae2a-fd488dcad63d')
       APP_KEY = credentials('09e0e7bb-583f-4ade-bd7f-5447da0ccbe0')
       dd_aws_integration_external_id = credentials('297b92da-03f9-4847-a641-e13a01746d75')
+      aws_key = credentials('aws_access')
+      secret_key = credentials('aws_secret')
     }
     tools {
         terraform "terraform4j"
@@ -40,7 +42,7 @@ pipeline
             }
 		    steps
 		    {
-		        sh 'terraform apply --auto-approve -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
+		        sh 'terraform apply --auto-approve -var "aws_access_key=$aws_key" -var "aws_secret_key=$secret_key" -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
 		  	}
 		}
 		stage ('deploy service')
@@ -51,9 +53,11 @@ pipeline
             }
             steps
             {
-               sh 'aws eks --region us-east-1 update-kubeconfig --name eks_crash'
+               sh 'aws eks --region us-east-1 update-kubeconfig --name eks-crash'
                sh 'helm repo add bitnami https://charts.bitnami.com/bitnami'
+               sh 'helm repo add datadog https://helm.datadoghq.com'
                sh 'helm install serviz bitnami/wordpress'
+               sh 'helm install ddagent -f datadog-values.yaml --set datadog.site="datadoghq.eu" --set datadog.apiKey=5cacd1e6f6378190f82052217a221c55 --set datadog.appKey=1fda98d321aded8b7a619761b8f84b6835b3d0bb datadog/datadog'
             }
 		}
 		stage('terraform destroy')
@@ -69,10 +73,11 @@ pipeline
 		        try 
 		        {
 		          sh 'helm delete serviz'
+		          sh 'helm delete ddagent'
 		        }
 		        finally
 		        {
-		          sh 'terraform destroy --auto-approve -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
+		          sh 'terraform destroy --auto-approve -var "aws_access_key=$aws_key" -var "aws_secret_key=$secret_key" -var "datadog_api_key=$API_KEY" -var "datadog_app_key=$APP_KEY" -var "datadog_aws_integration_external_id=$dd_aws_integration_external_id"'   
 		        }
 		      }
 		    }

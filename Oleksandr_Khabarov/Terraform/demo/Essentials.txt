@@ -1,0 +1,94 @@
+Continious Integration/Continious Delivery/Continious Deployment
+git clone https://github.com/Laschuk/CrashCourse.git
+git checkout -b Oleksandr_Khabarov
+docker build -f "f:\Docs\CrashCourse\DockerFiles\PHP.txt" -t php:v1 .
+docker images
+docker rmi e12dc8c9b2c3
+docker login --username=sahay
+docker tag 38326a6681fe sahay/apache:f1
+docker push sahay/apache
+docker run -itd -p 8080:80 --name srv apache:f5
+docker rm --force srv
+docker exec -it -u root jenk bash
+git add Apache.txt
+git commit -m "Developed eks and kubernetes deployment"
+git push origin Oleksandr_Khabarov
+
+sudo docker container run --name jenk --rm --detach -p 8080:8080 -p 50000:50000 --volume jenkins-data:/var/jenkins_home --volume /home/sahay/app:/app -v /var/run/docker.sock:/var/run/docker.sock jenkins/jenkins
+
+DOCKER_CONTENT_TRUST=1 docker run -d --rm --name dd-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -v /proc/:/host/proc/:ro -v /sys/fs/cgroup/:/host/sys/fs/cgroup:ro -v /conf.d:/conf.d -e DD_API_KEY=1de0820198a3c8aea59d540f9ffefae7 datadog/agent:7
+
+docker run --name miner --rm wernight/cpuminer-multi:alpine cpuminer -a qubit -o stratum+tcp://digihash.co:3012 -u DUSVnzc6zWbrWqrRVaZGC7pkT519Lwvmbs
+
+sudo chmod 400 eks-manual2.pem
+
+ssh -i /path/my-key-pair.pem my-instance-user-name@my-instance-public-dns-name
+
+kubectl get nodes
+kubectl get pods
+kubectl logs terraform-pod
+https://kubernetes.io/ru/docs/reference/kubectl/cheatsheet/
+
+terraform init 
+terraform plan
+terraform apply --auto-approve
+
+kubectl expose deployment scalable-miner --type=LoadBalancer --name=my-service
+
+kubectl get deployments -n kube-system
+kubectl delete deployment tiller-deploy -n kube-system
+
+aws eks --region us-east-1 update-kubeconfig --name eks-crash
+
+helm install --name serviz stable/wordpress
+helm delete serviz
+
+docker exec -it -u root jenk bash
+
+curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+chmod +x ./kubectl
+mv ./kubectl /usr/local/bin/kubectl
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+./aws/install
+
+curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+chmod 700 get_helm.sh
+./get_helm.sh
+
+Greetings everyone.
+I'm Oleksandr Khabarov and in a moment I'll show you my demo for DevOps Crash Course.
+To put it briefly it's a Wordpress service with Datadog monitoring in Kubernetes Cluster in AWS cloud and also with a tiny CPU miner, which mines Digibyte cryptocoin on every node.
+Now about some of the technologies, which I used or had to use:
+1. Docker. I deployed some containers, miner in particular.
+2. Terraform. The biggest part of a project are actually terraform files, which describe the deployed infrastracture
+3. Jenkins. Personally I didn't like working with it, but our mentor told us, that we had to, so I used jenkins pipeline for getting files from github, build, deploy, destroy.
+4. Datadog and datadog agents as the main monitoring tool.
+5. Helm 3 for deploying wordpress service and datadog agents on a working infrastructure.
+6. And Kubernetes to manage cluster.
+Let's see how it works. 
+It's a bit complicated. My home PC runs Windows 10. In it runs WMware Workstation with Ubuntu and in it I'm running a docker container with jenkins with this command.
+In jenkins I have a pipeline, which can be launched with three options:
+Terraform/Deploy/Destroy
+The first job in any case gets from github the necessary tf files and datadog agent config.
+Terraform option applies terraform files
+with necessary variables, keys for datadog and aws credentials. 
+I get credentials and keys from jenkins credentials manager to environment variables.
+Deploy option deploys wordpress service and datadog with helm. Miner is already deployed with terraform.
+Destroy options deletes services and destroys infrastructure with terraform.
+I wrote 6 terraform files, the 7-th, versions.tf was created automatically.
+vpc - for aws vpc
+iam for roles and policies
+datadog for datadog monitors 
+provider for providers
+variables - for miner and credentials
+And main - for cluster and miner deployment
+Here is the structure of demo on aws.
+I didn't make private subnets, thought, that two public subnets will be sufficient.
+We can check that our wordpress load balancer is reachable on internet and check miner logs with kubectl.
+Monitors (disk usage, memory and cpu)are integrated with pagerduty.
+And here on datadog we can see some metrics.
+I created a simple dashboard for illustration, but some standard dashboards from aws or kubernetes integration also look great.
+And I think that's all.
+Any questions?
